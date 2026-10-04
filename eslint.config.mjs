@@ -12,6 +12,11 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // The prototype, kept only as a visual reference.
+    "reference/**",
+    ".claude/**",
+    "playwright-report/**",
+    "test-results/**",
   ]),
 ]);
 

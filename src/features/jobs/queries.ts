@@ -1,0 +1,171 @@
+import "server-only"
+
+import { cache } from "react"
+
+import { todayYmd } from "@/lib/dates"
+import type { Tables } from "@/lib/supabase/database.types"
+import { createClient } from "@/lib/supabase/server"
+
+import type { CategoryKey } from "./categories"
+import { needsAction, type OfferStatus, type ViewerContext } from "./lifecycle"
+
+export type JobCard = Tables<"job_cards"> & { id: string; status: NonNullable<Tables<"job_cards">["status"]> }
+
+const CARD_COLUMNS = "*"
+
+function asCards(rows: Tables<"job_cards">[] | null): JobCard[] {
+  return (rows ?? []).filter((r): r is JobCard => !!r.id && !!r.status)
+}
+
+/** Everything about "my jobs" in one go: what I posted, what I help with, and my offers. Once per request. */
+export const getMyJobs = cache(async (viewerId: string) => {
+  const supabase = await createClient()
+  const [posted, helping, myOffers, myReviews] = await Promise.all([
+    supabase.from("job_cards").select(CARD_COLUMNS).eq("poster_id", viewerId).order("starts_at", { ascending: true }),
+    supabase.from("job_cards").select(CARD_COLUMNS).eq("helper_id", viewerId).order("starts_at", { ascending: true }),
+    supabase.from("offers").select("job_id, status, created_at").eq("helper_id", viewerId).order("created_at"),
+    supabase.from("reviews").select("job_id").eq("author_id", viewerId),
+  ])
+
+  const postedJobs = asCards(posted.data)
+  const openIds = postedJobs.filter((j) => j.status === "open").map((j) => j.id)
+  const pending = openIds.length
+    ? await supabase.from("offers").select("job_id").eq("status", "pending").in("job_id", openIds)
+    : { data: [] as { job_id: string }[] }
+
+  const pendingByJob = new Map<string, number>()
+  for (const o of pending.data ?? []) pendingByJob.set(o.job_id, (pendingByJob.get(o.job_id) ?? 0) + 1)
+
+  // Latest offer per job wins (people can offer again after withdrawing).
+  const offerByJob = new Map<string, OfferStatus>()
+  for (const o of myOffers.data ?? []) offerByJob.set(o.job_id, o.status)
+
+  const reviewed = new Set((myReviews.data ?? []).map((r) => r.job_id))
+
+  const helpingJobs = asCards(helping.data)
+  const helpingIds = new Set(helpingJobs.map((j) => j.id))
+  const offeredIds = [...offerByJob.entries()]
+    .filter(([id, status]) => !helpingIds.has(id) && (status === "pending" || status === "declined"))
+    .map(([id]) => id)
+  const offered = offeredIds.length
+    ? asCards((await supabase.from("job_cards").select(CARD_COLUMNS).in("id", offeredIds)).data)
+    : []
+
+  const contextFor = (jobId: string): ViewerContext => ({
+    viewerId,
+    myOffer: offerByJob.get(jobId) ?? null,
+    pendingOffers: pendingByJob.get(jobId) ?? 0,
+    reviewed: reviewed.has(jobId),
+  })
+
+  return { posted: postedJobs, helping: helpingJobs, offered, contextFor, offerByJob, pendingByJob, reviewed }
+})
+
+export type MyJobs = Awaited<ReturnType<typeof getMyJobs>>
+
+export function needsYouCount(my: MyJobs): number {
+  const all = [...my.posted, ...my.helping]
+  return all.filter((j) => needsAction(j, my.contextFor(j.id))).length
+}
+
+export type FeedFilters = {
+  category?: CategoryKey | "all"
+  q?: string
+  maxDistM?: number
+  minPay?: number
+  when?: "any" | "today" | "tomorrow" | "week" | "weekend"
+  sort?: "feed" | "near" | "pay" | "soon"
+  limit?: number
+}
+
+/** Open jobs from other people, filtered and sorted in the database (distance from the viewer's home). */
+export async function getFeed(viewerId: string, f: FeedFilters = {}): Promise<JobCard[]> {
+  const supabase = await createClient()
+  let q = supabase
+    .from("job_cards")
+    .select(CARD_COLUMNS)
+    .eq("status", "open")
+    .neq("poster_id", viewerId)
+    .gt("starts_at", new Date().toISOString())
+
+  if (f.category && f.category !== "all") q = q.eq("category", f.category)
+  if (f.maxDistM) q = q.lte("dist_m", f.maxDistM)
+  if (f.minPay) q = q.gte("pay_lei", f.minPay)
+  const search = f.q
+    ?.toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[%_,()]/g, " ")
+    .trim()
+  if (search) q = q.ilike("search_text", `%${search}%`)
+
+  const today = todayYmd()
+  if (f.when === "today") q = q.eq("starts_on", today)
+  if (f.when === "tomorrow") {
+    const d = new Date(`${today}T00:00:00Z`)
+    d.setUTCDate(d.getUTCDate() + 1)
+    q = q.eq("starts_on", d.toISOString().slice(0, 10))
+  }
+  if (f.when === "week") {
+    const d = new Date(`${today}T00:00:00Z`)
+    d.setUTCDate(d.getUTCDate() + 7)
+    q = q.lte("starts_on", d.toISOString().slice(0, 10))
+  }
+
+  switch (f.sort ?? "feed") {
+    case "near":
+      q = q.order("dist_m", { ascending: true, nullsFirst: false })
+      break
+    case "pay":
+      q = q.order("pay_lei", { ascending: false }).order("dist_m", { ascending: true, nullsFirst: false })
+      break
+    case "soon":
+      q = q.order("starts_at", { ascending: true })
+      break
+    default:
+      q = q.order("fits_me", { ascending: false }).order("dist_m", { ascending: true, nullsFirst: false })
+  }
+
+  const { data } = await q.limit(f.limit ?? 60)
+  let rows = asCards(data)
+  if (f.when === "weekend") {
+    rows = rows.filter((j) => {
+      const dow = new Date(`${j.starts_on}T00:00:00Z`).getUTCDay()
+      return dow === 0 || dow === 6
+    })
+  }
+  return rows
+}
+
+export async function getJobCard(id: string): Promise<JobCard | null> {
+  const supabase = await createClient()
+  const { data } = await supabase.from("job_cards").select(CARD_COLUMNS).eq("id", id).maybeSingle()
+  return data && data.id && data.status ? (data as JobCard) : null
+}
+
+export async function getPopularCategories() {
+  const supabase = await createClient()
+  const { data } = await supabase.rpc("popular_categories")
+  return data ?? []
+}
+
+export async function getOfferCandidates(jobId: string) {
+  const supabase = await createClient()
+  const { data } = await supabase.rpc("offer_candidates", { p_job_id: jobId })
+  return data ?? []
+}
+
+export async function getJobContact(jobId: string) {
+  const supabase = await createClient()
+  const { data } = await supabase.rpc("job_contact", { p_job_id: jobId })
+  return data?.[0] ?? null
+}
+
+/** The poster's own exact point and address (job_private is readable by the poster, and the helper after the pick). */
+export async function getJobPlace(jobId: string): Promise<{ lat: number; lng: number; address: string } | null> {
+  const supabase = await createClient()
+  const { data } = await supabase.from("job_private").select("exact_loc, address").eq("job_id", jobId).maybeSingle()
+  const loc = data?.exact_loc as { coordinates?: [number, number] } | null | undefined
+  if (!data || !loc?.coordinates) return null
+  return { lat: loc.coordinates[1], lng: loc.coordinates[0], address: data.address }
+}
