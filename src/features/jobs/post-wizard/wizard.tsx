@@ -25,8 +25,10 @@ import { CATEGORY_KEYS, type CategoryKey } from "../categories"
 import { CategoryTile } from "../components/job-bits"
 import { MinorsNoteClient } from "./minors-note-client"
 import { parseJob, suggestPay } from "../parse-job"
+import { jobPhotoUrl } from "../photos"
 import { hasBlockedWords } from "../safety"
 import { createJob } from "./actions"
+import { PhotoPicker } from "./photo-picker"
 
 type Draft = {
   step: number
@@ -44,6 +46,7 @@ type Draft = {
   lat: number
   lng: number
   address: string
+  photos: string[]
 }
 
 const STORAGE_KEY = "pocket-post-draft"
@@ -55,7 +58,7 @@ function reducer(state: Draft, action: Action): Draft {
   return { ...state, ...action.patch }
 }
 
-export function PostWizard({ today, home }: { today: string; home: { lat: number; lng: number; label: string } }) {
+export function PostWizard({ today, home, userId }: { today: string; home: { lat: number; lng: number; label: string }; userId: string }) {
   const t = useTranslations("post")
   const tc = useTranslations("categories")
   const tTime = useTranslations("time")
@@ -82,6 +85,7 @@ export function PostWizard({ today, home }: { today: string; home: { lat: number
     lat: home.lat,
     lng: home.lng,
     address: "",
+    photos: [],
   }
   // Rendered only in the browser (see client.tsx), so the saved draft can seed the first render.
   const [d, dispatch] = useReducer(reducer, blank, (initial): Draft => {
@@ -170,6 +174,7 @@ export function PostWizard({ today, home }: { today: string; home: { lat: number
         lat: d.lat,
         lng: d.lng,
         address: d.address,
+        photos: d.photos,
       })
       if (!r.ok) {
         setError(tErr.has(r.error) ? tErr(r.error) : tErr("unknown"))
@@ -179,6 +184,7 @@ export function PostWizard({ today, home }: { today: string; home: { lat: number
         sessionStorage.removeItem(STORAGE_KEY)
       } catch {}
       toast.success(t("posted"))
+      if (r.data!.photosFailed) toast.error(t("photos.attachFailed"))
       router.push(`/jobs/${r.data!.id}`)
     })
 
@@ -248,6 +254,7 @@ export function PostWizard({ today, home }: { today: string; home: { lat: number
               {t("blockedBody")}
             </Banner>
           ) : null}
+          <PhotoPicker userId={userId} paths={d.photos} onChange={(photos) => set({ photos })} />
         </div>
       )
       break
@@ -386,6 +393,18 @@ export function PostWizard({ today, home }: { today: string; home: { lat: number
           <div className="rounded-3xl border-[1.6px] border-border bg-card px-4 shadow-wm-xs">
             {row(t("kind"), d.category === "other" ? d.categoryLabel : d.category ? tc(d.category) : "", 0)}
             {d.text ? row(t("whatYouWrote"), d.text, 1) : null}
+            {d.photos.length
+              ? row(
+                  t("photos.label"),
+                  <span className="mt-1 flex gap-1.5">
+                    {d.photos.map((p) => (
+                      // eslint-disable-next-line @next/next/no-img-element -- the person's own upload
+                      <img key={p} src={jobPhotoUrl(p)} alt="" className="size-14 border border-border object-cover" />
+                    ))}
+                  </span>,
+                  1,
+                )
+              : null}
             {row(t("short.day"), longDate(d.date, locale), 2)}
             {row(t("short.time"), fmtTime(d.startMin), 3)}
             {row(t("howLong"), fmtDur(d.durMin), 4)}

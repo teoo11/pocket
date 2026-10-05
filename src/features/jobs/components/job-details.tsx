@@ -10,6 +10,7 @@ import { fmtDist, fmtDur } from "@/lib/format"
 import { cn } from "@/lib/utils"
 
 import type { CategoryKey } from "../categories"
+import { jobPhotoUrl } from "../photos"
 import { minorsWarning } from "../safety"
 import { CopyButton } from "./copy-button"
 
@@ -24,6 +25,29 @@ export function Facts({ items }: { items: { label: string; value: React.ReactNod
         </div>
       ))}
     </dl>
+  )
+}
+
+/** The poster's photos; each opens full size in a new tab. */
+export function JobPhotos({ paths }: { paths: string[] }) {
+  const t = useTranslations("job")
+  if (!paths.length) return null
+  return (
+    <ul className={cn("grid gap-2.5", paths.length === 1 ? "grid-cols-1" : "grid-cols-2")} aria-label={t("photos")}>
+      {paths.map((path, i) => (
+        <li key={path}>
+          <a href={jobPhotoUrl(path)} target="_blank" rel="noopener noreferrer" className="block">
+            {/* eslint-disable-next-line @next/next/no-img-element -- poster's upload, already shrunk to 1280px */}
+            <img
+              src={jobPhotoUrl(path)}
+              alt={t("photoAlt", { n: i + 1 })}
+              loading="lazy"
+              className={cn("w-full border-[1.6px] border-border object-cover", paths.length === 1 ? "max-h-96" : "aspect-square")}
+            />
+          </a>
+        </li>
+      ))}
+    </ul>
   )
 }
 

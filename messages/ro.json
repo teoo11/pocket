@@ -385,7 +385,9 @@
     "cancelBodyMatched": "Cel pe care l-ai ales va afla că nu mai e nevoie. Te rugăm să-l suni și tu.",
     "keep": "O păstrez",
     "cancelConfirm": "Da, șterge-o",
-    "cancelled": "Treaba a fost ștearsă"
+    "cancelled": "Treaba a fost ștearsă",
+    "photos": "Pozele jobului",
+    "photoAlt": "Poza {n} a jobului"
   },
   "review": {
     "title": "Cum a fost cu {name}?",
@@ -526,7 +528,19 @@
     "kind": "Tipul de ajutor",
     "whatYouWrote": "Ce ai scris",
     "change": "Schimbă",
-    "privacyNote": "Datele tale de contact și adresa rămân ascunse până alegi pe cineva."
+    "privacyNote": "Datele tale de contact și adresa rămân ascunse până alegi pe cineva.",
+    "photos": {
+      "label": "Poze (opțional)",
+      "add": "Adaugă poze",
+      "uploading": "Se încarcă…",
+      "full": "Ai adăugat {max} poze",
+      "remove": "Șterge",
+      "removeOne": "Șterge poza {n}",
+      "alt": "Poza {n} a jobului tău",
+      "hint": "Până la {max} poze îi ajută pe ceilalți să vadă despre ce e vorba. Nu pune fețe, numere de casă sau ceva ce arată adresa exactă.",
+      "failed": "Poza nu a putut fi încărcată. Încearcă un JPG sau PNG.",
+      "attachFailed": "Jobul e postat, dar pozele nu au putut fi adăugate."
+    }
   },
   "myJobs": {
     "title": "Tot ce <hl>te privește</hl>",

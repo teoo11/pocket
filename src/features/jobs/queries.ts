@@ -118,3 +118,10 @@ export async function getJobPlace(jobId: string): Promise<{ lat: number; lng: nu
   if (!data || !loc?.coordinates) return null
   return { lat: loc.coordinates[1], lng: loc.coordinates[0], address: data.address }
 }
+
+/** The job's photos (paths in the job-photos bucket), in the order the poster added them. */
+export async function getJobPhotos(jobId: string): Promise<string[]> {
+  const supabase = await createClient()
+  const { data } = await supabase.from("jobs").select("photo_paths").eq("id", jobId).maybeSingle()
+  return data?.photo_paths ?? []
+}

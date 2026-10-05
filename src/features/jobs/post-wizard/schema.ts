@@ -3,6 +3,7 @@ import { z } from "zod"
 import { isYmd } from "@/lib/dates"
 
 import { CATEGORY_KEYS } from "../categories"
+import { JOB_PHOTO_PATH, MAX_JOB_PHOTOS } from "../photos"
 
 /** What the posting wizard sends to create_job (the database checks it all again). */
 export const newJobSchema = z
@@ -18,6 +19,7 @@ export const newJobSchema = z
     lat: z.number().min(-90).max(90),
     lng: z.number().min(-180).max(180),
     address: z.string().trim().max(200),
+    photos: z.array(z.string().regex(JOB_PHOTO_PATH)).max(MAX_JOB_PHOTOS).default([]),
   })
   .refine((d) => d.category !== "other" || d.categoryLabel.length >= 2, { path: ["categoryLabel"] })
 

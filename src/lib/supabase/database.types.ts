@@ -224,6 +224,7 @@ export type Database = {
           minutes: number | null
           paid_at: string | null
           pay_lei: number
+          photo_paths: string[]
           poster_id: string | null
           public_loc: unknown
           start_min: number
@@ -251,6 +252,7 @@ export type Database = {
           minutes?: number | null
           paid_at?: string | null
           pay_lei: number
+          photo_paths?: string[]
           poster_id?: string | null
           public_loc: unknown
           start_min: number
@@ -278,6 +280,7 @@ export type Database = {
           minutes?: number | null
           paid_at?: string | null
           pay_lei?: number
+          photo_paths?: string[]
           poster_id?: string | null
           public_loc?: unknown
           start_min?: number
@@ -1230,6 +1233,10 @@ export type Database = {
       }
       set_home: {
         Args: { p_label: string; p_lat: number; p_lng: number }
+        Returns: undefined
+      }
+      set_job_photos: {
+        Args: { p_job_id: string; p_paths: string[] }
         Returns: undefined
       }
       start_job: { Args: { p_job_id: string }; Returns: undefined }

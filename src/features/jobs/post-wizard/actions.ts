@@ -8,7 +8,7 @@ import { createClient } from "@/lib/supabase/server"
 import { hasBlockedWords } from "../safety"
 import { newJobSchema } from "./schema"
 
-export async function createJob(input: unknown): Promise<ActionResult<{ id: string }>> {
+export async function createJob(input: unknown): Promise<ActionResult<{ id: string; photosFailed: boolean }>> {
   const parsed = newJobSchema.safeParse(input)
   if (!parsed.success) {
     const field = parsed.error.issues[0]?.path[0]
@@ -32,6 +32,13 @@ export async function createJob(input: unknown): Promise<ActionResult<{ id: stri
     p_address: d.address,
   })
   if (error || !data) return { ok: false, error: rpcErrorKey(error) }
+
+  // The photos were uploaded by the browser while posting; the database checks each one is the poster's own file.
+  let photosFailed = false
+  if (d.photos.length) {
+    const { error: photoError } = await supabase.rpc("set_job_photos", { p_job_id: data, p_paths: d.photos })
+    photosFailed = !!photoError
+  }
   revalidatePath("/", "layout")
-  return { ok: true, data: { id: data } }
+  return { ok: true, data: { id: data, photosFailed } }
 }
