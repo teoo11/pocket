@@ -1,6 +1,6 @@
 "use client"
 
-import { Camera, ChevronRight, Clock, Hand, History, MapPin, PencilLine, Route, Target, UserRound } from "lucide-react"
+import { Camera, ChevronRight, Clock, Hand, MapPin, PencilLine, Phone, Route, Target, UserRound } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
@@ -15,21 +15,22 @@ import { Textarea } from "@/components/ui/textarea"
 import { CATEGORY_KEYS, type CategoryKey } from "@/features/jobs/categories"
 import { CategoryTile } from "@/features/jobs/components/job-bits"
 import { asSchedule, type Schedule } from "@/features/jobs/schedule"
-import { PlacePicker } from "@/features/maps/components/place-picker"
-import type { Place } from "@/features/maps/places"
+import { HomePicker, type PickedHome } from "@/features/maps/components/home-picker"
 import { fmtTime, parseTime } from "@/lib/dates"
 import { fmtDist } from "@/lib/format"
 import type { ActionResult } from "@/lib/rpc-errors"
 import { createClient } from "@/lib/supabase/client"
 import { cn } from "@/lib/utils"
 
-import { setHome, updateAvatar, updatePrivate, updateProfile } from "../actions"
+import { setHome as saveHome, updateAvatar, updatePrivate, updateProfile } from "../actions"
 
 export type SettingsData = {
   userId: string
   name: string
   phone: string | null
   homeLabel: string | null
+  homeLat: number | null
+  homeLng: number | null
   schedule: unknown
   skills: CategoryKey[]
   maxDistM: number
@@ -56,7 +57,19 @@ function useSave() {
   return { pending, save }
 }
 
-function Row({ icon: Icon, title, value, onClick, href }: { icon: React.ElementType; title: string; value?: string; onClick?: () => void; href?: string }) {
+function Row({
+  icon: Icon,
+  title,
+  value,
+  onClick,
+  href,
+}: {
+  icon: React.ElementType
+  title: string
+  value?: string
+  onClick?: () => void
+  href?: string
+}) {
   const inner = (
     <>
       <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-wm-tile">
@@ -69,7 +82,8 @@ function Row({ icon: Icon, title, value, onClick, href }: { icon: React.ElementT
       <ChevronRight className="size-5 shrink-0 text-faint" aria-hidden />
     </>
   )
-  const cls = "flex min-h-16 w-full items-center gap-3 border-b border-border px-1 py-2.5 text-foreground no-underline last:border-0 hover:bg-wm-tile"
+  const cls =
+    "flex min-h-16 w-full items-center gap-3 border-b border-border px-1 py-2.5 text-foreground no-underline last:border-0 hover:bg-wm-tile"
   return href ? (
     <Link href={href} className={cls}>
       {inner}
@@ -88,29 +102,46 @@ const DISTANCES = [500, 1000, 2000, 5000, 20000] as const
 function scheduleSummary(s: Schedule, dayName: (d: number) => string, t: (k: string) => string) {
   const on = DAYS.filter((d) => s[String(d) as keyof Schedule])
   if (!on.length) return t("notAvailable")
-  const allDefault = on.length === 7 && on.every((d) => s[String(d) as keyof Schedule]?.[0] === 480 && s[String(d) as keyof Schedule]?.[1] === 1260)
+  const allDefault =
+    on.length === 7 &&
+    on.every((d) => s[String(d) as keyof Schedule]?.[0] === 480 && s[String(d) as keyof Schedule]?.[1] === 1260)
   return allDefault ? t("anyDay") : on.map(dayName).join(", ")
 }
 
-export function SettingsList({ data }: { data: SettingsData }) {
+export type SettingKey = "name" | "bio" | "phone" | "home" | "schedule" | "skills" | "dist"
+
+/**
+ * Editable settings as a card of rows, each opening a small dialog. `rows` chooses which ones, so the
+ * Profile page can put public ones (name, bio) and private ones (phone, home, job suggestions) apart.
+ */
+export function SettingsRows({ data, rows }: { data: SettingsData; rows: SettingKey[] }) {
   const t = useTranslations("me")
   const tc = useTranslations("categories")
   const { pending, save } = useSave()
-  const [open, setOpen] = useState<null | "name" | "home" | "schedule" | "skills" | "dist" | "bio">(null)
+  const [open, setOpen] = useState<null | SettingKey>(null)
   const close = () => setOpen(null)
   const dayName = (d: number) =>
-    new Intl.DateTimeFormat(data.locale === "en" ? "en-GB" : data.locale, { weekday: "short", timeZone: "UTC" }).format(new Date(Date.UTC(2026, 0, 4 + d)))
+    new Intl.DateTimeFormat(data.locale === "en" ? "en-GB" : data.locale, { weekday: "short", timeZone: "UTC" }).format(
+      new Date(Date.UTC(2026, 0, 4 + d)),
+    )
 
   // Local form state for each dialog.
   const [name, setName] = useState(data.name)
   const [phone, setPhone] = useState(data.phone ?? "")
-  const [place, setPlace] = useState<Place | null>(null)
+  const [home, setHome] = useState<PickedHome | null>(null)
   const [schedule, setSchedule] = useState<Schedule>(asSchedule(data.schedule))
   const [skills, setSkills] = useState<CategoryKey[]>(data.skills)
   const [dist, setDist] = useState(data.maxDistM)
   const [bio, setBio] = useState(data.bio)
 
-  const dialog = (key: typeof open, title: string, body: React.ReactNode, onSave: () => void, description?: string) => (
+  const dialog = (
+    key: typeof open,
+    title: string,
+    body: React.ReactNode,
+    onSave: () => void,
+    description?: string,
+    canSave = true,
+  ) => (
     <Dialog open={open === key} onOpenChange={(o) => setOpen(o ? key : null)}>
       <DialogContent className="max-h-[90dvh] overflow-y-auto">
         <DialogHeader>
@@ -118,7 +149,7 @@ export function SettingsList({ data }: { data: SettingsData }) {
           {description ? <DialogDescription>{description}</DialogDescription> : null}
         </DialogHeader>
         <div className="flex flex-col gap-4">{body}</div>
-        <Button size="lg" disabled={pending} onClick={onSave}>
+        <Button size="lg" disabled={pending || !canSave} onClick={onSave}>
           {t("save")}
         </Button>
       </DialogContent>
@@ -128,47 +159,113 @@ export function SettingsList({ data }: { data: SettingsData }) {
   return (
     <>
       <section className="rounded-3xl border-[1.6px] border-border bg-card px-4 py-1 shadow-wm-xs">
-        <Row icon={History} title={t("history")} value={t("historyHint")} href={`/profile/${data.userId}`} />
-        <Row icon={UserRound} title={t("nameAndPhone")} value={`${data.name} · ${data.phone || t("noPhone")}`} onClick={() => setOpen("name")} />
-        <Row icon={MapPin} title={t("home")} value={data.homeLabel ?? ""} onClick={() => setOpen("home")} />
-        <Row icon={Clock} title={t("when")} value={scheduleSummary(asSchedule(data.schedule), dayName, t)} onClick={() => setOpen("schedule")} />
-        <Row
-          icon={Hand}
-          title={t("skills")}
-          value={data.skills.length === CATEGORY_KEYS.length ? t("anything") : data.skills.map((k) => tc(k)).join(", ")}
-          onClick={() => setOpen("skills")}
-        />
-        <Row icon={Route} title={t("distance")} value={t("upTo", { dist: fmtDist(data.maxDistM, data.locale) })} onClick={() => setOpen("dist")} />
-        <Row icon={PencilLine} title={t("bio")} value={data.bio || t("bioEmpty")} onClick={() => setOpen("bio")} />
+        {rows.map((key) => {
+          switch (key) {
+            case "name":
+              return <Row key={key} icon={UserRound} title={t("name")} value={data.name} onClick={() => setOpen("name")} />
+            case "bio":
+              return (
+                <Row
+                  key={key}
+                  icon={PencilLine}
+                  title={t("bio")}
+                  value={data.bio || t("bioEmpty")}
+                  onClick={() => setOpen("bio")}
+                />
+              )
+            case "phone":
+              return (
+                <Row
+                  key={key}
+                  icon={Phone}
+                  title={t("phoneTitle")}
+                  value={data.phone || t("noPhone")}
+                  onClick={() => setOpen("phone")}
+                />
+              )
+            case "home":
+              return (
+                <Row key={key} icon={MapPin} title={t("home")} value={data.homeLabel ?? ""} onClick={() => setOpen("home")} />
+              )
+            case "schedule":
+              return (
+                <Row
+                  key={key}
+                  icon={Clock}
+                  title={t("when")}
+                  value={scheduleSummary(asSchedule(data.schedule), dayName, t)}
+                  onClick={() => setOpen("schedule")}
+                />
+              )
+            case "skills":
+              return (
+                <Row
+                  key={key}
+                  icon={Hand}
+                  title={t("skills")}
+                  value={data.skills.length === CATEGORY_KEYS.length ? t("anything") : data.skills.map((k) => tc(k)).join(", ")}
+                  onClick={() => setOpen("skills")}
+                />
+              )
+            case "dist":
+              return (
+                <Row
+                  key={key}
+                  icon={Route}
+                  title={t("distance")}
+                  value={t("upTo", { dist: fmtDist(data.maxDistM, data.locale) })}
+                  onClick={() => setOpen("dist")}
+                />
+              )
+          }
+        })}
       </section>
 
       {dialog(
         "name",
-        t("nameAndPhone"),
-        <>
-          <label className="flex flex-col gap-2 font-semibold">
-            {t("name")}
-            <Input value={name} maxLength={40} autoComplete="name" onChange={(e) => setName(e.target.value)} />
-          </label>
-          <label className="flex flex-col gap-2 font-semibold">
-            {t("phone")}
-            <Input value={phone} type="tel" inputMode="tel" autoComplete="tel" placeholder="+40 7XX XXX XXX" onChange={(e) => setPhone(e.target.value)} />
-          </label>
-          <p className="text-[0.9375rem] text-muted-foreground">{t("phoneHint")}</p>
-        </>,
-        () =>
-          save(async () => {
-            const a = await updateProfile({ display_name: name })
-            return a.ok ? updatePrivate({ phone }) : a
-          }, close),
+        t("name"),
+        <Input
+          value={name}
+          maxLength={40}
+          autoComplete="name"
+          aria-label={t("name")}
+          onChange={(e) => setName(e.target.value)}
+        />,
+        () => save(() => updateProfile({ display_name: name }), close),
+        t("nameHint"),
+      )}
+
+      {dialog(
+        "phone",
+        t("phoneTitle"),
+        <Input
+          value={phone}
+          type="tel"
+          inputMode="tel"
+          autoComplete="tel"
+          aria-label={t("phone")}
+          placeholder="+40 7XX XXX XXX"
+          onChange={(e) => setPhone(e.target.value)}
+        />,
+        () => save(() => updatePrivate({ phone }), close),
+        t("phoneHint"),
       )}
 
       {dialog(
         "home",
         t("home"),
-        <PlacePicker label={t("homePick")} value={place} onChange={setPlace} />,
-        () => place && save(() => setHome({ lat: place.lat, lng: place.lng, homeLabel: place.name }), close),
+        <HomePicker
+          label={t("homePick")}
+          initial={
+            data.homeLat != null && data.homeLng != null
+              ? { lat: data.homeLat, lng: data.homeLng, label: data.homeLabel ?? "" }
+              : null
+          }
+          onChange={setHome}
+        />,
+        () => home && save(() => saveHome({ lat: home.lat, lng: home.lng, homeLabel: home.label }), close),
         t("homeHint"),
+        !!home,
       )}
 
       {dialog(
@@ -232,7 +329,10 @@ export function SettingsList({ data }: { data: SettingsData }) {
                 role="checkbox"
                 aria-checked={on}
                 onClick={() => setSkills(on ? skills.filter((s) => s !== k) : [...skills, k])}
-                className={cn("flex min-h-14 items-center gap-3 rounded-2xl border-[1.6px] border-input px-3 text-left font-semibold", on && "border-primary bg-brand-soft text-brand-text")}
+                className={cn(
+                  "flex min-h-14 items-center gap-3 rounded-2xl border-[1.6px] border-input px-3 text-left font-semibold",
+                  on && "border-primary bg-brand-soft text-brand-text",
+                )}
               >
                 <CategoryTile category={k} size="sm" />
                 {tc(k)}
@@ -255,7 +355,10 @@ export function SettingsList({ data }: { data: SettingsData }) {
               role="radio"
               aria-checked={dist === m}
               onClick={() => setDist(m)}
-              className={cn("min-h-[3.375rem] rounded-lg border-[1.6px] border-input px-4 text-left font-semibold", dist === m && "border-primary bg-brand-soft text-brand-text")}
+              className={cn(
+                "min-h-[3.375rem] rounded-lg border-[1.6px] border-input px-4 text-left font-semibold",
+                dist === m && "border-primary bg-brand-soft text-brand-text",
+              )}
             >
               {t("upTo", { dist: fmtDist(m, data.locale) })}
             </button>
@@ -268,10 +371,15 @@ export function SettingsList({ data }: { data: SettingsData }) {
       {dialog(
         "bio",
         t("bio"),
-        <Textarea value={bio} maxLength={200} onChange={(e) => setBio(e.target.value)} placeholder={t("bioPlaceholder")} aria-label={t("bio")} />,
+        <Textarea
+          value={bio}
+          maxLength={200}
+          onChange={(e) => setBio(e.target.value)}
+          placeholder={t("bioPlaceholder")}
+          aria-label={t("bio")}
+        />,
         () => save(() => updateProfile({ bio }), close),
       )}
-
     </>
   )
 }
@@ -297,7 +405,10 @@ export function AvatarUpload({ userId, hasPhoto }: { userId: string; hasPhoto: b
       const path = `${userId}/${Date.now()}.webp`
       const { error } = await createClient().storage.from("avatars").upload(path, blob, { contentType: "image/webp" })
       if (error) throw error
-      save(() => updateAvatar(path), () => {})
+      save(
+        () => updateAvatar(path),
+        () => {},
+      )
     } catch {
       toast.error(t("photoFailed"))
     } finally {
@@ -324,7 +435,17 @@ export function AvatarUpload({ userId, hasPhoto }: { userId: string; hasPhoto: b
         {hasPhoto ? t("changePhoto") : t("addPhoto")}
       </Button>
       {hasPhoto ? (
-        <Button variant="quiet" size="sm" disabled={busy || pending} onClick={() => save(() => updateAvatar(null), () => {})}>
+        <Button
+          variant="quiet"
+          size="sm"
+          disabled={busy || pending}
+          onClick={() =>
+            save(
+              () => updateAvatar(null),
+              () => {},
+            )
+          }
+        >
           {t("removePhoto")}
         </Button>
       ) : null}

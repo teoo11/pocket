@@ -1,8 +1,8 @@
 /*
  * Adapted from Watermelon UI (https://ui.watermelon.sh), MIT License,
  * Copyright (c) 2026 Watermelon Platform Contributors. See THIRD_PARTY_NOTICES.md.
- * Pocket changes: items can be links (the selected tab lives in the URL) or buttons; optional counts
- * and disabled items; a scrolling "chips" look for long rows and a "segment" look for 2–3 options;
+ * Pocket changes: items can be links (the selected tab lives in the URL) or buttons; optional counts,
+ * disabled and dimmed items; a scrolling "chips" look for long rows and a "segment" look for 2–3 options;
  * the active item scrolls into view; sizes in rem.
  */
 "use client"
@@ -20,6 +20,8 @@ export interface FluidTabItem {
   href?: string
   count?: number
   disabled?: boolean
+  /** Shown faded but still usable (e.g. a category with no jobs right now). */
+  dimmed?: boolean
   /** A small tag above the label, e.g. "NOW" on the current month. */
   tag?: string
 }
@@ -96,6 +98,7 @@ export function FluidTabs({ items, active, onChange, layoutId, label, variant = 
           isActive && (variant === "chips" ? "font-bold text-background" : "font-bold text-foreground"),
           !isActive && variant === "segment" && "text-muted-foreground hover:text-foreground",
           item.disabled && "pointer-events-none opacity-40",
+          item.dimmed && !isActive && "opacity-55",
         )
         return item.href && !item.disabled ? (
           <Link

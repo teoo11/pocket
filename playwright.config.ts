@@ -25,6 +25,9 @@ export default defineConfig({
   ],
   webServer: {
     command: `npm run build && npx next start -p ${PORT}`,
+    // Without a Maps key the app uses its map-less fallbacks: deterministic, and no Google billing.
+    // E2E_MAPS=1 keeps the key from .env.local (it must allow http://localhost:3100/*).
+    env: { ...(process.env as Record<string, string>), ...(process.env.E2E_MAPS ? {} : { NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: "" }) },
     url: `http://localhost:${PORT}`,
     reuseExistingServer: !process.env.CI,
     timeout: 300_000,

@@ -1,7 +1,7 @@
 "use client"
 
-import { AdvancedMarker, Map, useMap } from "@vis.gl/react-google-maps"
-import { Home, X } from "lucide-react"
+import { AdvancedMarker, ControlPosition, Map, useMap } from "@vis.gl/react-google-maps"
+import { Home, LocateFixed, X } from "lucide-react"
 import { useTheme } from "next-themes"
 import { useTranslations } from "next-intl"
 import { useState } from "react"
@@ -20,9 +20,9 @@ type LatLng = { lat: number; lng: number }
 
 /**
  * The map of open jobs: a price pin at each job's public (approximate) point, a preview card when one is tapped,
- * "My home" and "Go to…" a neighbourhood. Exact addresses are never sent to the browser for this map.
+ * "My home" (or "Where I am") and "Go to…" a neighbourhood. Exact addresses are never sent to the browser.
  */
-export function JobsMap({ jobs, home }: { jobs: JobCard[]; home: LatLng }) {
+export function JobsMap({ jobs, origin, nearMe }: { jobs: JobCard[]; origin: LatLng; nearMe: boolean }) {
   const t = useTranslations("map")
   const enabled = useMapsEnabled()
   const failed = useMapsFailed()
@@ -43,7 +43,7 @@ export function JobsMap({ jobs, home }: { jobs: JobCard[]; home: LatLng }) {
         role="region"
         aria-label={t("label")}
         hidden={failed}
-        className="relative h-[calc(100dvh-13rem)] min-h-[26rem] overflow-hidden rounded-[1.25rem] border-[1.6px] border-border desk:h-[calc(100dvh-10rem)]"
+        className="relative h-[70dvh] min-h-[26rem] overflow-hidden rounded-[1.25rem] border-[1.6px] border-border"
       >
         {hydrated ? (
           <MapBoundary>
@@ -51,18 +51,24 @@ export function JobsMap({ jobs, home }: { jobs: JobCard[]; home: LatLng }) {
               key={resolvedTheme}
               {...BASE_MAP_OPTIONS}
               colorScheme={resolvedTheme === "dark" ? "DARK" : "LIGHT"}
-              defaultCenter={home}
+              defaultCenter={origin}
               defaultZoom={14}
               gestureHandling="greedy"
+              // Top right: the "Post a job" button sits in the bottom-right corner.
+              zoomControlOptions={{ position: ControlPosition.RIGHT_TOP }}
               onClick={() => setSelected(null)}
               className="size-full"
             >
-              <AdvancedMarker position={home} title={t("home")} zIndex={1}>
+              <AdvancedMarker position={origin} title={nearMe ? t("here") : t("home")} zIndex={1}>
                 <span
                   className="grid size-9 place-items-center rounded-full border-2 border-white bg-sky text-white shadow-md"
                   aria-hidden
                 >
-                  <Home className="size-4.5" strokeWidth={2.2} />
+                  {nearMe ? (
+                    <LocateFixed className="size-4.5" strokeWidth={2.2} />
+                  ) : (
+                    <Home className="size-4.5" strokeWidth={2.2} />
+                  )}
                 </span>
               </AdvancedMarker>
               {pins.map((j) => (
@@ -83,7 +89,7 @@ export function JobsMap({ jobs, home }: { jobs: JobCard[]; home: LatLng }) {
                   </span>
                 </AdvancedMarker>
               ))}
-              <MapTools home={home} />
+              <MapTools origin={origin} nearMe={nearMe} />
             </Map>
           </MapBoundary>
         ) : null}
@@ -112,8 +118,8 @@ export function JobsMap({ jobs, home }: { jobs: JobCard[]; home: LatLng }) {
   )
 }
 
-/** "My home" and a "Go to…" list of the 80 places, on top of the map. */
-function MapTools({ home }: { home: LatLng }) {
+/** Back to the origin ("My home" / "Where I am") and a "Go to…" list of the 80 places, on top of the map. */
+function MapTools({ origin, nearMe }: { origin: LatLng; nearMe: boolean }) {
   const t = useTranslations("map")
   const map = useMap()
   const go = (p: LatLng, zoom = 15) => {
@@ -122,9 +128,9 @@ function MapTools({ home }: { home: LatLng }) {
   }
   return (
     <div className="absolute top-3 left-3 flex flex-wrap gap-2">
-      <Button variant="secondary" size="sm" className="shadow-md" onClick={() => go(home)}>
-        <Home aria-hidden />
-        {t("home")}
+      <Button variant="secondary" size="sm" className="shadow-md" onClick={() => go(origin)}>
+        {nearMe ? <LocateFixed aria-hidden /> : <Home aria-hidden />}
+        {nearMe ? t("here") : t("home")}
       </Button>
       <select
         aria-label={t("goTo")}

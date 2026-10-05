@@ -11,7 +11,7 @@ Stack: Next.js 16 (App Router, `src/proxy.ts`, React Compiler) · Tailwind v4 ·
 ```bash
 npm run dev          # http://localhost:3000
 npm run check        # typecheck + lint + unit tests: run after every change
-npm run e2e          # Playwright (phone + desktop) on a production build at :3100 (`npm run dev` can keep running)
+npm run e2e          # Playwright (phone + desktop) on a production build at :3100, without a Maps key (E2E_MAPS=1 keeps it)
 npm run i18n:check   # en.json and ro.json must have the same keys
 npm run db:test      # SQL scenario tests (supabase/tests/) + pending migrations, in a rolled-back transaction
 npm run db:push      # apply supabase/migrations to the linked project
@@ -31,6 +31,8 @@ npm run account:test # a confirmed account for trying the app by hand
 8. **Sizes in rem**, so the Aa text-size setting scales them. Never hard-code px for text, buttons or inputs.
 9. Add or update tests for new logic (Vitest next to the code, Playwright in `e2e/`, SQL scenarios in `supabase/tests/`).
 10. **Maps** (`src/features/maps/`): wrap in `MapsProvider`, render `<Map>` only after hydration (`useHydrated`) and inside `MapBoundary`; never unmount a map because Google failed (hide it). The browser never gets a job's exact point unless it is the poster or the picked helper.
+12. **Job search** lives in SQL (`public.search_jobs` / `search_job_counts`, both built on `private.search_base`, so chip counts always equal results). The URL state is `src/features/jobs/search-params.ts`; Home is the search (`/search` and `/map` redirect). Distances are from home, or from "Near me now" (`pocket-near` httpOnly cookie, ~100 m, 2 h; `src/features/jobs/origin.ts`), never from a URL.
+13. **Profile** is `/me`: public part = the same `PublicProfileSummary` / `PublicProfileActivity` as `/profile/[id]` (your own id redirects to `/me`); private part = earnings, payouts, phone, home address, job suggestions, your data. Keep anything private out of the public components.
 11. **Stripe** (`src/lib/stripe.ts`, `src/features/payments/`): card functions in SQL are `service_role` only; server actions check the user, then call them with the admin client. Never export a helper that takes an account or payment id from a `"use server"` file. Webhooks are idempotent (`stripe_events`). Without `STRIPE_SECRET_KEY` Pocket is cash only.
 
 ## Product rules that must not be broken

@@ -40,7 +40,8 @@ test.describe("app shell", () => {
     await signedIn(page, USERS.other)
     const box = await page.getByRole("link", { name: "Post a job" }).boundingBox()
     expect(box!.height).toBeGreaterThanOrEqual(54)
-    await expect(page.getByRole("heading", { name: /close to you/ })).toBeVisible()
+    await expect(page.getByRole("search")).toBeVisible()
+    await expect(page.getByText(/jobs? found/)).toBeVisible()
   })
 
   for (const path of ["/login", "/signup", "/minors", "/help", "/legal/notices", "/privacy", "/terms"]) {
@@ -67,10 +68,8 @@ test.describe("app shell", () => {
     ["/me/earnings", /earnings/i],
     ["/notifications", /Notifications/],
     ["/messages", /Messages/],
-    ["/search", /Search jobs/],
     ["/contact", /Contact the Pocket team/],
     ["/post", /What do you need help with/],
-    ["/map", /Jobs on the map/],
   ]
   test("every signed-in page opens with no accessibility violations", async ({ page }) => {
     test.setTimeout(180_000)

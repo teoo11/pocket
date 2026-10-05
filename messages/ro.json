@@ -11,7 +11,7 @@
     "home": "Acasă",
     "top": "Top",
     "myJobs": "Treburile mele",
-    "me": "Eu",
+    "me": "Profil",
     "search": "Caută treburi",
     "notifications": "Notificări",
     "account": "Contul tău",
@@ -44,24 +44,11 @@
   "home": {
     "title": "Treburi mici, plătite, făcute de oameni din apropiere",
     "lede": "Cu un singur cont poți cere ajutor și îi poți ajuta pe alții, în București și Ilfov.",
-    "kindOfJob": "Tipul de treabă",
     "needsYou": "{count, plural, one {# treabă are nevoie de tine} few {# treburi au nevoie de tine} other {# de treburi au nevoie de tine}}",
     "needsYouHint": "Apasă ca să vezi ce ai de făcut.",
     "topHelpers": "Cei mai buni vecini luna aceasta",
-    "popular": "Categorii populare",
-    "openCount": "{count, plural, =0 {nicio treabă deschisă} one {# treabă deschisă} few {# treburi deschise} other {# de treburi deschise}}",
-    "mostAsked": "Cea mai cerută",
-    "nearTitle": "{count, plural, =0 {Treburi lângă tine} one {# treabă lângă tine} few {# treburi lângă tine} other {# de treburi lângă tine}}",
-    "nearDesc": "Cele mai apropiate treburi deschise de {place}, întâi cele mai apropiate.",
-    "nearNone": "Încă nu sunt treburi deschise lângă tine.",
-    "moreTitle": "Mai multe treburi",
-    "moreDesc": "Tot ce mai e deschis acum.",
-    "catTitle": "Treburi: {category}",
-    "catDesc": "Treburi deschise din categoria {category}, întâi cele potrivite.",
-    "searchFilters": "Caută cu filtre",
     "emptyTitle": "Încă nu sunt treburi aici",
-    "emptyBody": "Încearcă alt tip de treabă sau postează tu una.",
-    "onMap": "Vezi-le pe hartă"
+    "emptyBody": "Încearcă alt tip de treabă sau postează tu una."
   },
   "minorsNote": {
     "nightTitle": "Treabă de noapte: nu pentru sub 18 ani",
@@ -213,7 +200,9 @@
   "places": {
     "searchPlaceholder": "Scrie un nume, de ex. Titan sau Voluntari",
     "changeHint": "Ca să-l schimbi, scrie alt nume mai sus.",
-    "none": "Nu există niciun loc cu acest nume în București sau Ilfov."
+    "none": "Nu există niciun loc cu acest nume în București sau Ilfov.",
+    "addressPlaceholder": "Începe să scrii strada și numărul",
+    "addressPrivate": "Adresa ta rămâne privată. Ne ajută doar să măsurăm distanțele; vecinii văd doar cartierul."
   },
   "errors": {
     "unknown": "Ceva n-a mers. Te rugăm să încerci din nou.",
@@ -588,7 +577,6 @@
     "fromPoints": "de la {points} pct"
   },
   "profile": {
-    "you": "Tu",
     "levelLine": "Nivelul {n} · {name}",
     "jobsDone": "Treburi făcute",
     "timeHelping": "Timp de ajutor",
@@ -607,7 +595,6 @@
       "helper": "ca ajutor",
       "poster": "când a cerut ajutor"
     },
-    "selfNote": "Asta văd ceilalți. Câștigurile tale nu sunt arătate niciodată.",
     "ratingAsPoster": "Evaluare când cere ajutor",
     "knownFor": "Apreciat pentru"
   },
@@ -643,16 +630,13 @@
     },
     "noEarnings": "Încă nu ai câștiguri",
     "noEarningsBody": "Când ajuți la o treabă, ce primești apare aici.",
-    "history": "Istoricul meu",
-    "historyHint": "Ce văd ceilalți",
-    "nameAndPhone": "Nume și telefon",
     "noPhone": "fără telefon",
     "name": "Numele tău",
     "phone": "Număr de telefon (opțional)",
     "phoneHint": "Îl vede doar persoana cu care stabilești o treabă, după ce o alegi.",
     "home": "Unde locuiesc",
-    "homePick": "Cartier sau localitate",
-    "homeHint": "Ne ajută să-ți arătăm treburi din apropiere. Nimeni nu-ți vede adresa.",
+    "homePick": "Adresa ta",
+    "homeHint": "Distanțele până la treburi se măsoară de aici. Vecinii văd doar cartierul.",
     "when": "Când pot ajuta",
     "whenHint": "Treburile care se potrivesc cu aceste ore apar primele pe Acasă.",
     "anyDay": "Orice zi, 08:00–21:00",
@@ -677,7 +661,19 @@
     "removePhoto": "Șterge",
     "photoFailed": "Poza nu a putut fi încărcată. Încearcă un JPG sau PNG sub 10 MB.",
     "minorsSub": "Codul muncii, Legea nr. 53/2003",
-    "contactSub": "Vorbește cu un reprezentant"
+    "contactSub": "Vorbește cu un reprezentant",
+    "publicTitle": "Profilul tău public",
+    "publicHint": "Vecinii văd asta când te oferi să ajuți sau postezi o treabă.",
+    "privateTitle": "Privat",
+    "privateHint": "Doar tu vezi tot ce e mai jos.",
+    "activityTitle": "Treburile și recenziile tale",
+    "activityHint": "Tot public: treburile terminate și ce spun oamenii despre tine.",
+    "contactTitle": "Contact și acasă",
+    "contactHint": "Telefonul îl vede doar persoana cu care stabilești o treabă, după alegere. Adresa nu apare niciodată.",
+    "suggestionsTitle": "Sugestii de treburi",
+    "suggestionsHint": "Le folosim ca să-ți sugerăm treburi potrivite. Nu apar pe profilul tău.",
+    "phoneTitle": "Număr de telefon",
+    "nameHint": "Apare pe profilul tău și lângă treburile și ofertele tale."
   },
   "notifications": {
     "title": "Notificări",
@@ -763,7 +759,22 @@
     },
     "count": "{count, plural, =0 {Nicio treabă găsită} one {# treabă găsită} few {# treburi găsite} other {# de treburi găsite}}",
     "emptyTitle": "Nicio treabă nu se potrivește",
-    "emptyBody": "Încearcă mai puține filtre sau alt cuvânt."
+    "emptyBody": "Încearcă mai puține filtre sau alt cuvânt.",
+    "examples": "Arată treburile exemplu",
+    "examplesHint": "Treburi de probă care arată cum funcționează Pocket. Le poți vedea, dar nu le poți lua.",
+    "noExamples": "Fără treburi exemplu",
+    "view": "Arată ca",
+    "list": "Listă",
+    "map": "Hartă",
+    "clearText": "Șterge textul căutării",
+    "clearAll": "Șterge căutarea și filtrele",
+    "showMore": "Arată mai multe treburi",
+    "fromHome": "Distanțe de acasă",
+    "fromHere": "Distanțe de unde ești acum",
+    "useHere": "Folosește locul unde sunt acum",
+    "backHome": "Măsoară de acasă",
+    "locationDenied": "Nu am putut afla locul în care ești. Verifică dacă Pocket îl poate folosi sau măsoară în continuare de acasă.",
+    "locationUnavailable": "Acest dispozitiv nu poate trimite locația. Distanțele rămân măsurate de acasă."
   },
   "contact": {
     "title": "Contactează echipa Pocket",
@@ -826,9 +837,7 @@
     "safetyHelper": "Păstrează conversația în Pocket. Nu plăti niciodată ca să primești o treabă și refuză orice ți se pare în neregulă."
   },
   "map": {
-    "title": "Treburi pe hartă",
     "label": "Harta treburilor",
-    "note": "Pinii arată aproximativ unde e fiecare treabă, la câțiva pași de adresa reală. Adresa exactă o primește doar persoana aleasă.",
     "unavailable": "Harta nu poate fi afișată acum. Găsești toate treburile pe Acasă și în Căutare.",
     "count": "{count, plural, =0 {Nicio treabă pe hartă} one {O treabă pe hartă} few {# treburi pe hartă} other {# de treburi pe hartă}}",
     "home": "Acasă la mine",
@@ -844,7 +853,8 @@
     "exactLabel": "Harta locului exact al treburii",
     "areaLabel": "Harta zonei în care e treaba",
     "exactNote": "Locul exact. Doar tu și persoana aleasă îl vedeți.",
-    "areaNote": "Treaba e undeva în acest cerc. Adresa exactă apare după alegere."
+    "areaNote": "Treaba e undeva în acest cerc. Adresa exactă apare după alegere.",
+    "here": "Unde sunt"
   },
   "earningsPopup": {
     "label": "Câștiguri noi",

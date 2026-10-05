@@ -2,12 +2,13 @@ import "server-only"
 
 import { cache } from "react"
 
-import { todayYmd } from "@/lib/dates"
 import type { Tables } from "@/lib/supabase/database.types"
 import { createClient } from "@/lib/supabase/server"
 
 import type { CategoryKey } from "./categories"
 import { needsAction, type OfferStatus, type ViewerContext } from "./lifecycle"
+import type { SearchOrigin } from "./origin"
+import { searchArgs, type SearchState } from "./search-params"
 
 export type JobCard = Tables<"job_cards"> & { id: string; status: NonNullable<Tables<"job_cards">["status"]> }
 
@@ -68,85 +69,33 @@ export function needsYouCount(my: MyJobs): number {
   return all.filter((j) => needsAction(j, my.contextFor(j.id))).length
 }
 
-export type FeedFilters = {
-  category?: CategoryKey | "all"
-  q?: string
-  maxDistM?: number
-  minPay?: number
-  when?: "any" | "today" | "tomorrow" | "week" | "weekend"
-  sort?: "feed" | "near" | "pay" | "soon"
-  limit?: number
+/**
+ * The job search on Home: open, upcoming jobs from other people, filtered, sorted and counted in the database
+ * (public.search_jobs / search_job_counts). Distances are from `origin` ("near me now") or else from home.
+ */
+export async function searchJobs(state: SearchState, origin: SearchOrigin | null): Promise<JobCard[]> {
+  const supabase = await createClient()
+  const { data } = await supabase.rpc("search_jobs", {
+    ...searchArgs(state, origin),
+    p_category: state.cat === "all" ? undefined : state.cat,
+    p_sort: state.sort,
+    p_limit: state.limit,
+  })
+  return asCards(data)
 }
 
-/** Open jobs from other people, filtered and sorted in the database (distance from the viewer's home). */
-export async function getFeed(viewerId: string, f: FeedFilters = {}): Promise<JobCard[]> {
+/** Jobs per category for the chips, with every other filter applied ("All" is the sum). */
+export async function searchJobCounts(state: SearchState, origin: SearchOrigin | null): Promise<Partial<Record<CategoryKey, number>>> {
   const supabase = await createClient()
-  let q = supabase
-    .from("job_cards")
-    .select(CARD_COLUMNS)
-    .eq("status", "open")
-    .neq("poster_id", viewerId)
-    .gt("starts_at", new Date().toISOString())
-
-  if (f.category && f.category !== "all") q = q.eq("category", f.category)
-  if (f.maxDistM) q = q.lte("dist_m", f.maxDistM)
-  if (f.minPay) q = q.gte("pay_lei", f.minPay)
-  const search = f.q
-    ?.toLowerCase()
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .replace(/[%_,()]/g, " ")
-    .trim()
-  if (search) q = q.ilike("search_text", `%${search}%`)
-
-  const today = todayYmd()
-  if (f.when === "today") q = q.eq("starts_on", today)
-  if (f.when === "tomorrow") {
-    const d = new Date(`${today}T00:00:00Z`)
-    d.setUTCDate(d.getUTCDate() + 1)
-    q = q.eq("starts_on", d.toISOString().slice(0, 10))
-  }
-  if (f.when === "week") {
-    const d = new Date(`${today}T00:00:00Z`)
-    d.setUTCDate(d.getUTCDate() + 7)
-    q = q.lte("starts_on", d.toISOString().slice(0, 10))
-  }
-
-  switch (f.sort ?? "feed") {
-    case "near":
-      q = q.order("dist_m", { ascending: true, nullsFirst: false })
-      break
-    case "pay":
-      q = q.order("pay_lei", { ascending: false }).order("dist_m", { ascending: true, nullsFirst: false })
-      break
-    case "soon":
-      q = q.order("starts_at", { ascending: true })
-      break
-    default:
-      q = q.order("fits_me", { ascending: false }).order("dist_m", { ascending: true, nullsFirst: false })
-  }
-
-  const { data } = await q.limit(f.limit ?? 60)
-  let rows = asCards(data)
-  if (f.when === "weekend") {
-    rows = rows.filter((j) => {
-      const dow = new Date(`${j.starts_on}T00:00:00Z`).getUTCDay()
-      return dow === 0 || dow === 6
-    })
-  }
-  return rows
+  const { data } = await supabase.rpc("search_job_counts", searchArgs(state, origin))
+  return Object.fromEntries((data ?? []).map((r) => [r.category, r.open_count]))
 }
 
-export async function getJobCard(id: string): Promise<JobCard | null> {
+/** One job as a card; with an origin, its distance is from there (like the search). */
+export async function getJobCard(id: string, origin: SearchOrigin | null = null): Promise<JobCard | null> {
   const supabase = await createClient()
-  const { data } = await supabase.from("job_cards").select(CARD_COLUMNS).eq("id", id).maybeSingle()
+  const { data } = await supabase.rpc("job_cards_for", { p_ids: [id], p_lat: origin?.lat, p_lng: origin?.lng }).maybeSingle()
   return data && data.id && data.status ? (data as JobCard) : null
-}
-
-export async function getPopularCategories() {
-  const supabase = await createClient()
-  const { data } = await supabase.rpc("popular_categories")
-  return data ?? []
 }
 
 export async function getOfferCandidates(jobId: string) {

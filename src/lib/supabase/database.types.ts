@@ -1047,6 +1047,47 @@ export type Database = {
         Args: { p_job_id: string; p_minutes: number }
         Returns: undefined
       }
+      job_cards_for: {
+        Args: { p_ids: string[]; p_lat?: number; p_lng?: number }
+        Returns: {
+          area_label: string | null
+          cancelled_at: string | null
+          category: Database["public"]["Enums"]["job_category"] | null
+          category_label: string | null
+          confirmed_at: string | null
+          created_at: string | null
+          description: string | null
+          dist_m: number | null
+          dur_min: number | null
+          finished_at: string | null
+          fits_me: boolean | null
+          half1_paid_at: string | null
+          helper_id: string | null
+          id: string | null
+          is_example: boolean | null
+          lat: number | null
+          lng: number | null
+          minutes: number | null
+          paid_at: string | null
+          pay_lei: number | null
+          poster_avatar: string | null
+          poster_id: string | null
+          poster_name: string | null
+          search_text: string | null
+          start_min: number | null
+          started_at: string | null
+          starts_at: string | null
+          starts_on: string | null
+          status: Database["public"]["Enums"]["job_status"] | null
+          title: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "job_cards"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       job_contact: {
         Args: { p_job_id: string }
         Returns: {
@@ -1114,18 +1155,78 @@ export type Database = {
         Returns: string
       }
       pick_helper: { Args: { p_offer_id: string }; Returns: undefined }
-      popular_categories: {
-        Args: never
-        Returns: {
-          category: Database["public"]["Enums"]["job_category"]
-          open_count: number
-          total: number
-        }[]
-      }
       prepare_account_deletion: { Args: never; Returns: undefined }
       record_cash_payment: {
         Args: { p_job_id: string; p_part: number }
         Returns: undefined
+      }
+      search_job_counts: {
+        Args: {
+          p_examples?: boolean
+          p_lat?: number
+          p_lng?: number
+          p_max_dist_m?: number
+          p_min_pay?: number
+          p_q?: string
+          p_when?: string
+        }
+        Returns: {
+          category: Database["public"]["Enums"]["job_category"]
+          open_count: number
+        }[]
+      }
+      search_jobs: {
+        Args: {
+          p_category?: Database["public"]["Enums"]["job_category"]
+          p_examples?: boolean
+          p_lat?: number
+          p_limit?: number
+          p_lng?: number
+          p_max_dist_m?: number
+          p_min_pay?: number
+          p_offset?: number
+          p_q?: string
+          p_sort?: string
+          p_when?: string
+        }
+        Returns: {
+          area_label: string | null
+          cancelled_at: string | null
+          category: Database["public"]["Enums"]["job_category"] | null
+          category_label: string | null
+          confirmed_at: string | null
+          created_at: string | null
+          description: string | null
+          dist_m: number | null
+          dur_min: number | null
+          finished_at: string | null
+          fits_me: boolean | null
+          half1_paid_at: string | null
+          helper_id: string | null
+          id: string | null
+          is_example: boolean | null
+          lat: number | null
+          lng: number | null
+          minutes: number | null
+          paid_at: string | null
+          pay_lei: number | null
+          poster_avatar: string | null
+          poster_id: string | null
+          poster_name: string | null
+          search_text: string | null
+          start_min: number | null
+          started_at: string | null
+          starts_at: string | null
+          starts_on: string | null
+          status: Database["public"]["Enums"]["job_status"] | null
+          title: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "job_cards"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       set_home: {
         Args: { p_label: string; p_lat: number; p_lng: number }

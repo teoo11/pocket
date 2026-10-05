@@ -6,17 +6,16 @@ import { useActionState, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { AuthCard, IconInput } from "@/components/watermelon/auth-01"
-import { PlacePicker } from "@/features/maps/components/place-picker"
-import type { Place } from "@/features/maps/places"
+import { HomePicker, type PickedHome } from "@/features/maps/components/home-picker"
 
 import { completeOnboarding } from "../actions"
 
-/** "Last step": confirm the name, pick where you live, optionally add a phone number. */
+/** "Last step": confirm the name, find your home address (Google) or neighbourhood, optionally add a phone. */
 export function OnboardingForm({ defaultName }: { defaultName: string }) {
   const t = useTranslations("onboarding")
   const tErr = useTranslations("errors")
   const locale = useLocale()
-  const [place, setPlace] = useState<Place | null>(null)
+  const [home, setHome] = useState<PickedHome | null>(null)
   const [state, action, pending] = useActionState(completeOnboarding, {})
   const error = state.error
 
@@ -24,9 +23,9 @@ export function OnboardingForm({ defaultName }: { defaultName: string }) {
     <AuthCard heading={t("title")} subheading={t("subtitle")} footer={t("promise")}>
       <form action={action} className="flex flex-col gap-5" noValidate>
         <input type="hidden" name="locale" value={locale} />
-        <input type="hidden" name="lat" value={place?.lat ?? ""} />
-        <input type="hidden" name="lng" value={place?.lng ?? ""} />
-        <input type="hidden" name="homeLabel" value={place?.name ?? ""} />
+        <input type="hidden" name="lat" value={home?.lat ?? ""} />
+        <input type="hidden" name="lng" value={home?.lng ?? ""} />
+        <input type="hidden" name="homeLabel" value={home?.label ?? ""} />
         <IconInput
           icon={UserRound}
           label={t("name")}
@@ -37,10 +36,9 @@ export function OnboardingForm({ defaultName }: { defaultName: string }) {
           required
         />
         <p className="-mt-3 text-[0.9375rem] text-muted-foreground">{t("nameHint")}</p>
-        <PlacePicker
+        <HomePicker
           label={t("home")}
-          value={place}
-          onChange={setPlace}
+          onChange={setHome}
           error={error === "place_required" || error === "outside_area" ? tErr(error) : undefined}
         />
         <IconInput

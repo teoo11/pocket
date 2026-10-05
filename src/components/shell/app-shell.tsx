@@ -1,4 +1,4 @@
-import { Bell, MessageCircle, Search } from "lucide-react"
+import { Bell, MessageCircle } from "lucide-react"
 import Link from "next/link"
 import { getTranslations } from "next-intl/server"
 
@@ -22,7 +22,7 @@ type ShellProps = {
   chats?: number
 }
 
-/** Signed-in frame: top bar (logo, tabs on desktop, Aa, search, bell, avatar), the page, the phone dock and the Post button. */
+/** Signed-in frame: top bar (logo, tabs on desktop, Aa, messages, bell, avatar), the page, the phone dock and the Post button. */
 export async function AppShell({ children, user, unread = 0, needsYou = 0, chats = 0 }: ShellProps) {
   const t = await getTranslations("nav")
   const badges = needsYou ? { myJobs: needsYou } : {}
@@ -35,11 +35,6 @@ export async function AppShell({ children, user, unread = 0, needsYou = 0, chats
           <TopNav badges={badges} />
           <div className="ml-auto flex items-center gap-0.5">
             <TextSizeButton />
-            <Button variant="ghost" size="icon" asChild>
-              <Link href="/search" aria-label={t("search")}>
-                <Search strokeWidth={1.7} aria-hidden />
-              </Link>
-            </Button>
             {user ? (
               <Button variant="ghost" size="icon" asChild className="relative">
                 <Link href="/messages" aria-label={chats ? t("messagesUnread", { count: chats }) : t("messages")}>

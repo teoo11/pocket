@@ -11,7 +11,7 @@
     "home": "Home",
     "top": "Top",
     "myJobs": "My jobs",
-    "me": "Me",
+    "me": "Profile",
     "search": "Search jobs",
     "notifications": "Notifications",
     "account": "Your account",
@@ -44,24 +44,11 @@
   "home": {
     "title": "Small paid jobs, done by people nearby",
     "lede": "One account lets you ask for help and help others, in Bucharest and Ilfov.",
-    "kindOfJob": "Kind of job",
     "needsYou": "{count, plural, one {# job needs you} other {# jobs need you}}",
     "needsYouHint": "Tap to see what to do next.",
     "topHelpers": "Top helpers this month",
-    "popular": "Popular categories",
-    "openCount": "{count, plural, =0 {no jobs open} one {# job open} other {# jobs open}}",
-    "mostAsked": "Most asked",
-    "nearTitle": "{count, plural, =0 {Jobs close to you} one {# job close to you} other {# jobs close to you}}",
-    "nearDesc": "The closest open jobs to {place}, nearest first.",
-    "nearNone": "No open jobs near you yet.",
-    "moreTitle": "More jobs",
-    "moreDesc": "Everything else that’s open right now.",
-    "catTitle": "{category} jobs",
-    "catDesc": "Open {category} jobs, best match first.",
-    "searchFilters": "Search with filters",
     "emptyTitle": "No jobs here yet",
-    "emptyBody": "Try another kind of job, or post one yourself.",
-    "onMap": "See them on the map"
+    "emptyBody": "Try another kind of job, or post one yourself."
   },
   "minorsNote": {
     "nightTitle": "Night job: not for under-18s",
@@ -213,7 +200,9 @@
   "places": {
     "searchPlaceholder": "Type a name, e.g. Titan or Voluntari",
     "changeHint": "To change it, type another name above.",
-    "none": "No place with that name in Bucharest or Ilfov."
+    "none": "No place with that name in Bucharest or Ilfov.",
+    "addressPlaceholder": "Start typing your street and number",
+    "addressPrivate": "Your address stays private. It’s only used to measure distances; neighbours see just your neighbourhood."
   },
   "errors": {
     "unknown": "Something went wrong. Please try again.",
@@ -588,7 +577,6 @@
     "fromPoints": "from {points} pts"
   },
   "profile": {
-    "you": "You",
     "levelLine": "Level {n} · {name}",
     "jobsDone": "Jobs done",
     "timeHelping": "Time helping",
@@ -607,7 +595,6 @@
       "helper": "as a helper",
       "poster": "as a poster"
     },
-    "selfNote": "This is what other people see. Your earnings are never shown.",
     "ratingAsPoster": "Rating as a poster",
     "knownFor": "Known for"
   },
@@ -643,16 +630,13 @@
     },
     "noEarnings": "No earnings yet",
     "noEarningsBody": "When you help with a job, what you’re paid shows up here.",
-    "history": "My history",
-    "historyHint": "What other people see",
-    "nameAndPhone": "Name and phone",
     "noPhone": "no phone",
     "name": "Your name",
     "phone": "Phone number (optional)",
     "phoneHint": "Only shown to the person you agree a job with, after the pick.",
     "home": "Where I live",
-    "homePick": "Neighbourhood or town",
-    "homeHint": "We use it to show jobs near you. Nobody sees your address.",
+    "homePick": "Your address",
+    "homeHint": "Distances to jobs are measured from here. Neighbours only see your neighbourhood.",
     "when": "When I can help",
     "whenHint": "Jobs that fit these hours come first on Home.",
     "anyDay": "Any day, 08:00–21:00",
@@ -677,7 +661,19 @@
     "removePhoto": "Remove",
     "photoFailed": "That photo couldn’t be uploaded. Try a JPG or PNG under 10 MB.",
     "minorsSub": "Romanian Labour Code, Law no. 53/2003",
-    "contactSub": "Talk to a representative"
+    "contactSub": "Talk to a representative",
+    "publicTitle": "Your public profile",
+    "publicHint": "Neighbours see this when you offer to help or post a job.",
+    "privateTitle": "Private",
+    "privateHint": "Only you can see everything below.",
+    "activityTitle": "Your jobs and reviews",
+    "activityHint": "Also public: your finished jobs and what people say about you.",
+    "contactTitle": "Contact and home",
+    "contactHint": "Your phone is shown only to the person you agree a job with, after the pick. Your address is never shown.",
+    "suggestionsTitle": "Job suggestions",
+    "suggestionsHint": "Used to suggest jobs that fit you. Not shown on your profile.",
+    "phoneTitle": "Phone number",
+    "nameHint": "Shown on your profile and next to your jobs and offers."
   },
   "notifications": {
     "title": "Notifications",
@@ -763,7 +759,22 @@
     },
     "count": "{count, plural, =0 {No jobs found} one {# job found} other {# jobs found}}",
     "emptyTitle": "No jobs match",
-    "emptyBody": "Try fewer filters, or another word."
+    "emptyBody": "Try fewer filters, or another word.",
+    "examples": "Show example jobs",
+    "examplesHint": "Sample jobs that show how Pocket works. You can look, but not take them.",
+    "noExamples": "No example jobs",
+    "view": "Show as",
+    "list": "List",
+    "map": "Map",
+    "clearText": "Clear the search text",
+    "clearAll": "Clear search and filters",
+    "showMore": "Show more jobs",
+    "fromHome": "Distances from your home",
+    "fromHere": "Distances from where you are now",
+    "useHere": "Use where I am now",
+    "backHome": "Back to my home",
+    "locationDenied": "We couldn’t get your location. Check that Pocket may use it, or keep measuring from your home.",
+    "locationUnavailable": "This device can’t share its location. Distances stay from your home."
   },
   "contact": {
     "title": "Contact the Pocket team",
@@ -826,9 +837,7 @@
     "safetyHelper": "Keep the conversation in Pocket. Never pay anything to get a job, and say no to anything that feels wrong."
   },
   "map": {
-    "title": "Jobs on the map",
     "label": "Map of jobs",
-    "note": "Pins show roughly where each job is, a short walk from the real address. The exact address is shared only with the person who is picked.",
     "unavailable": "The map can’t be shown right now. You can still find every job on Home and in Search.",
     "count": "{count, plural, =0 {No jobs on the map} one {# job on the map} other {# jobs on the map}}",
     "home": "My home",
@@ -844,7 +853,8 @@
     "exactLabel": "Map of the job’s exact place",
     "areaLabel": "Map of the area where the job is",
     "exactNote": "The exact place. Only you and the person picked can see it.",
-    "areaNote": "The job is somewhere in this circle. The exact address is shared after the pick."
+    "areaNote": "The job is somewhere in this circle. The exact address is shared after the pick.",
+    "here": "Where I am"
   },
   "earningsPopup": {
     "label": "New earnings",

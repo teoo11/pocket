@@ -54,7 +54,7 @@ export function AccountMenu({ user }: { user: MenuUser }) {
           <>
             <DropdownMenuLabel className="text-base font-bold text-foreground">{user.name}</DropdownMenuLabel>
             <DropdownMenuItem asChild className="min-h-11">
-              <Link href={`/profile/${user.id}`}>
+              <Link href="/me">
                 <UserRound aria-hidden />
                 {t("account.myProfile")}
               </Link>

@@ -30,8 +30,9 @@ type Suggestion = {
 
 /**
  * Street address with Google Places (New) suggestions limited to Bucharest and Ilfov, and a map to put the pin
- * exactly (tap or drag; the street is then filled in by reverse geocoding). Typing without picking a suggestion
- * is fine too: the text is kept as written and the pin stays where it is.
+ * exactly (tap or drag; the street is then filled in by reverse geocoding).
+ * - "job" mode: typing without picking a suggestion is fine too; the text is kept as written, the pin stays.
+ * - "home" mode: only a picked suggestion or a placed pin counts (the point is what distances are measured from).
  */
 export function AddressPicker({
   id: givenId,
@@ -39,12 +40,14 @@ export function AddressPicker({
   placeholder,
   value,
   onChange,
+  mode = "job",
 }: {
   id?: string
   label: string
   placeholder?: string
   value: { lat: number; lng: number; address: string }
   onChange: (v: PickedAddress) => void
+  mode?: "job" | "home"
 }) {
   const t = useTranslations("map")
   const locale = useLocale()
@@ -62,6 +65,7 @@ export function AddressPicker({
   const [open, setOpen] = useState(false)
   const [outside, setOutside] = useState(false)
   const [center, setCenter] = useState({ lat: value.lat, lng: value.lng })
+  const [text, setText] = useState(value.address)
   const token = useRef<google.maps.places.AutocompleteSessionToken | null>(null)
   const latest = useRef(0)
 
@@ -71,12 +75,13 @@ export function AddressPicker({
       return
     }
     setOutside(false)
+    setText(address)
     onChange({ lat, lng, address, area: nearestPlace(lat, lng).name })
   }
 
   // Suggestions as you type (debounced). One session token per search, ended by picking a place.
   useEffect(() => {
-    const input = value.address.trim()
+    const input = text.trim()
     if (!places || !open || input.length < 3) return
     const request = ++latest.current
     const timer = setTimeout(async () => {
@@ -108,7 +113,7 @@ export function AddressPicker({
       }
     }, 250)
     return () => clearTimeout(timer)
-  }, [places, value.address, open, locale])
+  }, [places, text, open, locale])
 
   const pick = async (s: Suggestion) => {
     setOpen(false)
@@ -128,7 +133,7 @@ export function AddressPicker({
       setOutside(true)
       return
     }
-    let address = value.address
+    let address = text
     if (geocoding) {
       try {
         const { results } = await new geocoding.Geocoder().geocode({
@@ -144,7 +149,7 @@ export function AddressPicker({
     emit(lat, lng, address)
   }
 
-  const showList = open && suggestions.length > 0 && value.address.trim().length >= 3
+  const showList = open && suggestions.length > 0 && text.trim().length >= 3
 
   return (
     <div className="flex flex-col gap-3">
@@ -160,18 +165,16 @@ export function AddressPicker({
           aria-autocomplete="list"
           aria-activedescendant={showList && active >= 0 ? `${listId}-${active}` : undefined}
           autoComplete="off"
-          value={value.address}
+          value={text}
           maxLength={200}
           placeholder={placeholder}
           onChange={(e) => {
             setOpen(true)
+            setText(e.target.value)
             if (e.target.value.trim().length < 3) setSuggestions([])
-            onChange({
-              lat: value.lat,
-              lng: value.lng,
-              address: e.target.value,
-              area: nearestPlace(value.lat, value.lng).name,
-            })
+            if (mode === "job") {
+              onChange({ lat: value.lat, lng: value.lng, address: e.target.value, area: nearestPlace(value.lat, value.lng).name })
+            }
           }}
           onBlur={() => setTimeout(() => setOpen(false), 150)}
           onKeyDown={(e) => {

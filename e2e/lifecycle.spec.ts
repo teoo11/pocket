@@ -55,8 +55,7 @@ test("post → offer → pick → start → pay half → finish → confirm → 
 
   // ── Helper finds it on the map, then offers ──
   if (process.env.SCREENS) {
-    await helper.goto("/map")
-    await expect(helper.getByRole("region", { name: "Map of jobs" })).toBeVisible()
+    await helper.goto("/?view=map")
     await helper.waitForTimeout(3000)
     await shot(helper, "map")
   }
@@ -144,6 +143,8 @@ test("post → offer → pick → start → pay half → finish → confirm → 
   await expect(helper.getByText("You earned 3 points on Top helpers")).toBeVisible()
   // Both written, so both are revealed, on each side.
   await expect(helper.getByText(/’s review of you/)).toBeVisible()
+  // React reveals streamed content on an animation frame, which browsers pause in background tabs.
+  await poster.bringToFront()
   await poster.reload()
   // The page frame shows at once and the job streams in after it.
   await expect(poster.getByText(/’s review of you/)).toBeVisible({ timeout: 15_000 })
