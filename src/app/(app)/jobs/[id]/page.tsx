@@ -22,10 +22,10 @@ import {
 import { MessageButton } from "@/features/chat/components/message-button"
 import { getJobConversations } from "@/features/chat/queries"
 import { JobThumb, useWhen } from "@/features/jobs/components/job-bits"
-import { ContactBox, Facts, HelperRow, MinorsNote, PayProgress, PersonRow, PointsBox } from "@/features/jobs/components/job-details"
+import { ContactBox, Facts, HelperRow, JobPhotos, MinorsNote, PayProgress, PersonRow, PointsBox } from "@/features/jobs/components/job-details"
 import { isMatched, nextSteps, roleOf } from "@/features/jobs/lifecycle"
 import { getSearchOrigin } from "@/features/jobs/origin"
-import { getJobCard, getJobContact, getJobPlace, getMyJobs, getOfferCandidates } from "@/features/jobs/queries"
+import { getJobCard, getJobContact, getJobPhotos, getJobPlace, getMyJobs, getOfferCandidates } from "@/features/jobs/queries"
 import { JobMiniMap } from "@/features/maps/components/job-mini-map"
 import { ReportButton } from "@/features/moderation/components/report-button"
 import { ReviewCard } from "@/features/reviews/components/review-card"
@@ -53,7 +53,7 @@ export default async function JobPage({ params, searchParams }: PageProps<"/jobs
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound()
   const viewer = await requireViewer()
   // Distances as in the search: from "near me now" when set, otherwise from home.
-  const [job, my] = await Promise.all([getJobCard(id, await getSearchOrigin()), getMyJobs(viewer.id)])
+  const [job, my, photos] = await Promise.all([getJobCard(id, await getSearchOrigin()), getMyJobs(viewer.id), getJobPhotos(id)])
   if (!job) notFound()
 
   const t = await getTranslations()
@@ -141,6 +141,7 @@ export default async function JobPage({ params, searchParams }: PageProps<"/jobs
       />
       <PointsBox minutes={minutes} earned={finished} who={role === "helper" ? "you" : role === "poster" ? "yourHelper" : "theHelper"} />
       {job.description ? <p className="text-lg whitespace-pre-line">{job.description}</p> : null}
+      <JobPhotos paths={photos} />
       {mapPoint ? (
         <JobMiniMap key="exact" lat={mapPoint.lat} lng={mapPoint.lng} exact />
       ) : job.lat != null && job.lng != null ? (

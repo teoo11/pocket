@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation"
 import { z } from "zod"
 
+import { JOB_PHOTOS_BUCKET } from "@/features/jobs/photos"
 import { type ActionResult, rpcErrorKey } from "@/lib/rpc-errors"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
@@ -27,6 +28,8 @@ export async function deleteMyAccount(input: z.input<typeof confirmSchema>): Pro
   const admin = createAdminClient()
   const { data: files } = await admin.storage.from("avatars").list(uid)
   if (files?.length) await admin.storage.from("avatars").remove(files.map((f) => `${uid}/${f.name}`))
+  const { data: jobPhotos } = await admin.storage.from(JOB_PHOTOS_BUCKET).list(uid, { limit: 1000 })
+  if (jobPhotos?.length) await admin.storage.from(JOB_PHOTOS_BUCKET).remove(jobPhotos.map((f) => `${uid}/${f.name}`))
   const { error: deleteError } = await admin.auth.admin.deleteUser(uid)
   if (deleteError) {
     console.error("[account] delete failed", deleteError)

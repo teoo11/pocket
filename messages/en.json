@@ -385,7 +385,9 @@
     "cancelBodyMatched": "Your helper will be told the job is no longer needed. Please call them too.",
     "keep": "Keep it",
     "cancelConfirm": "Yes, delete it",
-    "cancelled": "The job was deleted"
+    "cancelled": "The job was deleted",
+    "photos": "Photos of the job",
+    "photoAlt": "Photo {n} of the job"
   },
   "review": {
     "title": "How was it with {name}?",
@@ -526,7 +528,19 @@
     "kind": "Kind of help",
     "whatYouWrote": "What you wrote",
     "change": "Change",
-    "privacyNote": "Your contact details and address stay hidden until you pick someone."
+    "privacyNote": "Your contact details and address stay hidden until you pick someone.",
+    "photos": {
+      "label": "Photos (optional)",
+      "add": "Add photos",
+      "uploading": "Uploading…",
+      "full": "You’ve added {max} photos",
+      "remove": "Remove",
+      "removeOne": "Remove photo {n}",
+      "alt": "Photo {n} of your job",
+      "hint": "Up to {max} photos help people see what the job involves. Leave out faces, house numbers and anything that shows the exact address.",
+      "failed": "That photo couldn’t be uploaded. Try a JPG or PNG.",
+      "attachFailed": "Your job is posted, but the photos couldn’t be added."
+    }
   },
   "myJobs": {
     "title": "Everything you’re <hl>part of</hl>",

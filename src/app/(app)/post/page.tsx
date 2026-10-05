@@ -21,7 +21,7 @@ export default async function PostPage() {
   }
   return (
     <Page>
-      <PostWizardClient today={todayYmd()} home={home} />
+      <PostWizardClient today={todayYmd()} home={home} userId={viewer.id} />
     </Page>
   )
 }
